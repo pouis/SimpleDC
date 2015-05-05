@@ -52,17 +52,17 @@ def display_status():
 
     T2.config(state=NORMAL)
     T2.delete(1.0, END)
-    T2.insert(END, "L    %s¥n" % _hp)
-    T2.insert(END, "E    %s¥n" % _exp)
-    T2.insert(END, "G    %s¥n" % _gold)
-    T2.insert(END, "A    %s¥n" % _age)
+    T2.insert(END, "L    %s\n" % _hp)
+    T2.insert(END, "E    %s\n" % _exp)
+    T2.insert(END, "G    %s\n" % _gold)
+    T2.insert(END, "A    %s\n" % _age)
     T2.see(END)
     T2.config(state=DISABLED)
 
 
 def display_text():            # here, you should not put (self) or it breaks
     T.config(state=NORMAL)
-    T.insert(END, "%s¥n" % text)
+    T.insert(END, "%s\n" % text)
     T.see(END)
     T.config(state=DISABLED)
 
@@ -72,7 +72,7 @@ def explore():
     global text
 
     if at_home:
-        text = '¥n家に負けず劣らず薄暗いダンジョンにもぐった。'
+        text = '\n家に負けず劣らず薄暗いダンジョンにもぐった。'
         display_text()
         at_home = False
 
@@ -124,7 +124,7 @@ def home():
             jyumyou = 60
             tenmei = random.randrange(sukesan._age, jyumyou+1, 1)
             print("tenmei")
-           if tenmei == jyumyou:
+            if tenmei == jyumyou:
                 print("jyumyou")
                 is_alive = False
                 sukesan._hp= 0
