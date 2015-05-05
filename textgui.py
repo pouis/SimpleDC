@@ -16,6 +16,7 @@ T2.grid(column=3, row=0, columnspan=1)
 S.config(command=T.yview)
 T.config(yscrollcommand=S.set)
 T.config(state=DISABLED)
+T2.config(state=DISABLED)
 # ---------------------
 
 # -----SETUP EVENT LIST-----
@@ -27,71 +28,139 @@ eventlist = [
 ]
 # ---------------------------
 
+# -----INITIAL SETUP VARIABLES-----
+at_home = True
+is_alive = True
+# ---------------------------------
 
-def show_entry_fields(self):    # need to put (self) otherwise e.bind('<Return>', show_entry_fields) doesn't work
-    userinput = e.get()
-    T.config(state=NORMAL)      # allow display area to be edited
-    T.insert(END, ">%s\n" % userinput)  # insert text from the input field
-    T.see(END)
-    T.config(state=DISABLED)    # lock display are from editing so that user can't type in directly
-    e.delete(0, END)            # clear the input field
-    evaluate(userinput)
+def checkstatus():
+    global text
+    global is_alive
+    if sukesan._hp <= 0:
+        text = '免れることのない死が訪れた。ピンピンころり。やったね！'
+        is_alive = False
+        btn2.grid_forget()
+        btn3.grid_forget()
+        display_text()
+
+def display_status():
+    _hp = sukesan._hp
+    _exp = sukesan._exp
+    _gold = sukesan._gold
+    _age = sukesan._age
+    checkstatus()
+
+    T2.config(state=NORMAL)
+    T2.delete(1.0, END)
+    T2.insert(END, "L    %s¥n" % _hp)
+    T2.insert(END, "E    %s¥n" % _exp)
+    T2.insert(END, "G    %s¥n" % _gold)
+    T2.insert(END, "A    %s¥n" % _age)
+    T2.see(END)
+    T2.config(state=DISABLED)
 
 
-def display_quote():            # here, you should not put (self) or it breaks
+def display_text():            # here, you should not put (self) or it breaks
     T.config(state=NORMAL)
-    T.insert(END, "%s\n" % quote)
+    T.insert(END, "%s¥n" % text)
     T.see(END)
     T.config(state=DISABLED)
 
 
-def evaluate(userinput):
-    global quote
-    if userinput == "bonjour":
-        quote = "nice to meet you"
-        display_quote()
-    elif userinput == "":
-        eventnb = random.randrange(0, 4, 1)  # random select of event
-        event = eventlist[eventnb]          # search in eventlist corresponding event(Class)
-        quote = event.eventtext
-        display_quote()
-        mainchartest = event.eventtest
-        a=sukesan._agi
-        print(mainchartest)
-        print(a)
-        #hurdlecheck(event.eventhurdle,b)
+def explore():
+    global at_home
+    global text
+
+    if at_home:
+        text = '¥n家に負けず劣らず薄暗いダンジョンにもぐった。'
+        display_text()
+        at_home = False
+
+    eventnb = random.randrange(0, 4, 1)  # random select of event
+    event = eventlist[eventnb]          # search in eventlist corresponding event(Class)
+    text = event.eventtext
+    display_text()
+    testparameter = event.eventtest
+    if testparameter == "_str":
+        mainchartest = random.randrange(0, sukesan._str+1, 1)
+    elif testparameter == "_agi":
+        mainchartest = random.randrange(0, sukesan._agi+1, 1)
+    elif testparameter == "_int":
+        mainchartest = random.randrange(0, sukesan._int+1, 1)
+    elif testparameter == "_hp":
+        mainchartest = random.randrange(0, sukesan._hp+1, 1)
+    else:
+        mainchartest = 0
+    hurdlecheck(event.eventhurdle, mainchartest, event)
+    display_status()
 
 
-def hurdlecheck(eventhurdle, b):
-    pass
+def hurdlecheck(eventhurdle, mainchartest, event):
+    global text
+    if eventhurdle > mainchartest:  # case fail
+        text = event.msgeventfail
+        incidenceeffect = random.randrange(event.incidencemin, event.incidencemax+1, 1)
+        sukesan._hp -= incidenceeffect
+    else:
+        text = event.msgeventsucceed  # case succeed
+        expeffect = random.randrange(event.expmin, event.expmax+1, 1)
+        sukesan._exp += expeffect
+        goldeffect = random.randrange(event.goldmin, event.goldmax+1, 1)
+        sukesan._gold += goldeffect
+    display_text()
 
-Label(root, text=">").grid(row=1, column=0, sticky=W+E)
-e = Entry(root)
-e.grid(row=1, column=1, sticky=W+E)
-e.bind('<Return>', show_entry_fields)
-Button(root, text='Quit', command=root.quit).grid(row=2, column=1)
+
+def home():
+    global at_home
+    global is_alive
+    if not at_home:
+        global text
+        text = 'おうちに帰った。'
+        at_home = True
+        sukesan._hp = sukesan.maxhp
+        sukesan._age += 1
+        if sukesan._age >= 40:
+            print("over40")
+            jyumyou = 60
+            tenmei = random.randrange(sukesan._age, jyumyou+1, 1)
+            print("tenmei")
+           if tenmei == jyumyou:
+                print("jyumyou")
+                is_alive = False
+                sukesan._hp= 0
+
+    else:
+        text = '狭くて暗くて嫌かもしれませんが、ここがあなたの家です。'
+    display_text()
+    display_status()
+
+btn1 = Button(root, text='Quit', command=root.quit)
+btn1.grid(row=3, column=3)
+btn2 = Button(root, text='探索する', command=explore)
+btn2.grid(row=2, column=1)
+btn3 = Button(root, text='帰宅する', command=home)
+btn3.grid(row=2, column=3)
 
 
-quote = "test display"
-display_quote()
 explore = Explore()
 explore.display()
 print(explore.eventtext)
-sukesan = MainChar(1, "", "sukesan", 100, 100, 100, 100, 100, 100, 100)
+sukesan = MainChar(1, "", "sukesan", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
+display_status()
 
-#--------------TIMER------------
-#---I don't know how to use it properly yet---
-#counter = 0
-#def counter_label(label):
+# --------------TIMER------------
+# ---I don't know how to use it properly yet---
+# counter = 0
+# def counter_label(label):
 #  def count():
 #    global counter
 #    counter += 1
 #    label.config(text=str(counter))
-#    display_quote()
+#    display_text()
 #    label.after(1000, count)
 #  count()
-#label = Label(root, fg="green")
-#counter_label(label)
-#-------------------------------
+# label = Label(root, fg="green")
+# counter_label(label)
+# -------------------------------
 
 mainloop()
