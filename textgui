@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from tkinter import *
 from events import *
 from mainchar import *
@@ -29,7 +31,7 @@ eventlist = [
 def show_entry_fields(self):    # need to put (self) otherwise e.bind('<Return>', show_entry_fields) doesn't work
     userinput = e.get()
     T.config(state=NORMAL)      # allow display area to be edited
-    T.insert(END, ">%s¥n" % userinput)  # insert text from the input field
+    T.insert(END, ">%s\n" % userinput)  # insert text from the input field
     T.see(END)
     T.config(state=DISABLED)    # lock display are from editing so that user can't type in directly
     e.delete(0, END)            # clear the input field
@@ -38,7 +40,7 @@ def show_entry_fields(self):    # need to put (self) otherwise e.bind('<Return>'
 
 def display_quote():            # here, you should not put (self) or it breaks
     T.config(state=NORMAL)
-    T.insert(END, "%s¥n" % quote)
+    T.insert(END, "%s\n" % quote)
     T.see(END)
     T.config(state=DISABLED)
 
