@@ -19,13 +19,59 @@ T.config(state=DISABLED)
 T2.config(state=DISABLED)
 # ---------------------
 
+# -----MAP SETUP-----
+
+mapdict = {
+    '地下１階': 'map1',
+    '地下２階': 'map2',
+    '地下３階': 'map3',
+}
+
+map1 = []
+for i in range(0, 10):
+    map1.append(Explore())
+for i in range(0, 5):
+    map1.append(Encounter())
+for i in range(0, 3):
+    map1.append(Pit())
+for i in range(0, 2):
+    map1.append(HiddenDoor())
+for i in range(0, 1):
+    map1.append(Treasure())
+
+map2 = []
+for i in range(0, 2):
+    map2.append(Explore())
+for i in range(0, 2):
+    map2.append(Encounter())
+for i in range(0, 2):
+    map2.append(Pit())
+for i in range(0, 2):
+    map2.append(HiddenDoor())
+for i in range(0, 2):
+    map2.append(Treasure())
+
+map3 = []
+for i in range(0, 2):
+    map3.append(Explore())
+for i in range(0, 2):
+    map3.append(Encounter())
+for i in range(0, 2):
+    map3.append(Pit())
+for i in range(0, 2):
+    map3.append(HiddenDoor())
+for i in range(0, 2):
+    map3.append(Treasure())
+
+# ------------------
+
 # -----SETUP EVENT LIST-----
-eventlist = [
-    Explore(),      # 0
-    Encounter(),    # 1
-    Pit(),          # 2
-    HiddenDoor(),   # 3
-]
+#eventlist = [
+#    Explore(),      # 0
+#    Encounter(),    # 1
+#    Pit(),          # 2
+#    HiddenDoor(),   # 3
+#]
 # ---------------------------
 
 # -----INITIAL SETUP VARIABLES-----
@@ -39,8 +85,8 @@ def checkstatus():
     if sukesan._hp <= 0:
         text = '免れることのない死が訪れた。ピンピンころり。やったね！'
         is_alive = False
-        btn2.grid_forget()
-        btn3.grid_forget()
+        btn_explore.grid_forget()
+        btn_home.grid_forget()
         display_text()
 
 def display_status():
@@ -71,13 +117,21 @@ def explore():
     global at_home
     global text
 
+# selectedmap = mapdict[menulist1var.get()]
+
+    if len(map1)==0:
+        text="ダンジョンを制覇した！"
+        display_text()
+        return
+
     if at_home:
         text = '\n家に負けず劣らず薄暗いダンジョンにもぐった。'
         display_text()
         at_home = False
 
-    eventnb = random.randrange(0, 4, 1)  # random select of event
-    event = eventlist[eventnb]          # search in eventlist corresponding event(Class)
+    eventnb = random.randrange(0, len(map1), 1)  # random select of event
+    # event = eventlist[eventnb]          # search in eventlist corresponding event(Class)
+    event = map1.pop(eventnb)   # pick up the event from map list
     text = event.eventtext
     display_text()
     testparameter = event.eventtest
@@ -134,17 +188,44 @@ def home():
     display_text()
     display_status()
 
-btn1 = Button(root, text='Quit', command=root.quit)
-btn1.grid(row=3, column=3)
-btn2 = Button(root, text='探索する', command=explore)
-btn2.grid(row=2, column=1)
-btn3 = Button(root, text='帰宅する', command=home)
-btn3.grid(row=2, column=3)
+def shop():
+    global shopwindow
+    btn_explore.config(state=DISABLED)
+    btn_home.config(state=DISABLED)
+    btn_shop.config(state=DISABLED)
+    shopwindow = Toplevel()
+    label = Label(shopwindow, text="何を買うんだね？")
+    label.pack(side="top", fill="both", padx=10, pady=10)
+    shopmenu1var=StringVar()
+    shopmenu1var.set('選んでね')
+    availablequests = ['あれ','これ','それ']
+    shopmenu1 = OptionMenu(shopwindow, shopmenu1var, *availablequests)
+    shopmenu1.pack()
+    shopwindow.protocol("WM_DELETE_WINDOW", on_closing)
+    pass
 
 
-explore = Explore()
-explore.display()
-print(explore.eventtext)
+def on_closing():
+    btn_explore.config(state=NORMAL)
+    btn_home.config(state=NORMAL)
+    btn_shop.config(state=NORMAL)
+    shopwindow.destroy()
+
+btn_quit = Button(root, text='Quit', command=root.quit)
+btn_quit.grid(row=4, column=3)
+btn_explore = Button(root, text='探索する', command=explore)
+btn_explore.grid(row=2, column=1)
+btn_home = Button(root, text='帰宅する', command=home)
+btn_home.grid(row=2, column=3)
+btn_shop = Button(root, text='購入する', command=shop)
+btn_shop.grid(row=3, column=3)
+menulist1var=StringVar()
+menulist1var.set('地下１階')
+availabledg = ['地下１階','地下２階','地下３階']
+menulist1 = OptionMenu(root, menulist1var, *availabledg)
+menulist1.grid(row=3, column=1)
+menulist1var.get()
+
 sukesan = MainChar(1, "", "sukesan", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
 display_status()
 
