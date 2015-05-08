@@ -9,12 +9,6 @@ LARGE_FONT = ("Verdana", 12)
 
 # -----MAP SETUP-----
 
-mapdict = {
-    '地下１階': 'map1',
-    '地下２階': 'map2',
-    '地下３階': 'map3',
-}
-
 map1 = []
 for i in range(0, 10):
     map1.append(Explore())
@@ -51,14 +45,39 @@ for i in range(0, 2):
 for i in range(0, 2):
     map3.append(Treasure())
 
+mapdict = {
+    '地下１階': map1,
+    '地下２階': map2,
+    '地下３階': map3,
+}
+
+current_map = map1
 # ------------------
+
+
+# -----MAIN CHARACTER SETUP-----
+char1 = MainChar(1, "", "スケ郎", 25, 25, 70, 70, 70, 70, 70, 0, 0, 36)
+char2 = MainChar(2, "", "スケ次", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
+char3 = MainChar(3, "", "すけさん", 100, 100, 90, 90, 90, 90, 90, 0, 0, 36)
+
+chardict = {
+    'スケ郎': char1,
+    'スケ次': char2,
+    'すけさん': char3,
+}
+sukesan = char1
+# ------------------------------
+
 
 # -----INITIAL SETUP VARIABLES-----
 at_home = True
 is_alive = True
+turn = 0
 # ---------------------------------
 
 
+# ----- Window Management System -----
+# I don't fully understand how it works, but it works
 class Generator(Tk):
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
@@ -78,8 +97,10 @@ class Generator(Tk):
     def show_frame(self, cont):
         frame = self.frames[cont]
         frame.tkraise()
+# ----------------------------------
 
 
+# -----Start of Main Page Window and Executions -----
 class MainPage(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
@@ -109,11 +130,28 @@ class MainPage(Frame):
         menu_list1_var = StringVar()
         menu_list1_var.set('地下１階')
         available_dg = ['地下１階', '地下２階', '地下３階']
-        menu_list1 = OptionMenu(self, menu_list1_var, *available_dg)
-        menu_list1.grid(row=3, column=1)
-        menu_list1_var.get()
+        # available_dg = mapdict.keys() # Why if I replace above line with this, it does not work?
+        print(available_dg)
+        self.menu_list1 = ttk.OptionMenu(self, menu_list1_var, *available_dg, command=self.select_map)
+        self.menu_list1.grid(row=3, column=1)
+        menu_list2_var = StringVar()
+        menu_list2_var.set('スケ郎')
+        available_char = ['スケ郎', 'スケ次', 'すけさん']
+        self.menu_list2 = ttk.OptionMenu(self, menu_list2_var, *available_char, command=self.select_char)
+        self.menu_list2.grid(row=4, column=1)
 
         display_status(self)
+
+    def select_map(self, map_name):
+        global current_map
+        current_map = mapdict[map_name]
+        print(current_map)
+
+    def select_char(self, char_name):
+        global sukesan
+        sukesan = chardict[char_name]
+        display_status(self)
+        print(sukesan)
 
     def display_text(self, itext):
         self.t.config(state=NORMAL)
@@ -123,41 +161,62 @@ class MainPage(Frame):
 
     def explore(self):
         global at_home
-        if len(map1)==0:
-            text="ダンジョンを制覇した！"
+        global turn
+        global event
+        global main_char_test
+
+        if len(current_map) == 0:
+            text = "このダンジョンは制覇した！"
             self.display_text(text)
+            self.btn_home.config(state=NORMAL)
             return
+
+        self.btn_explore.config(state=DISABLED)
+        self.btn_shop.config(state=DISABLED)
+        self.menu_list1.config(state=DISABLED)
+
         if at_home:
             text = '\n家に負けず劣らず薄暗いダンジョンにもぐった。'
             self.display_text(text)
             at_home = False
-        
-        event_nb = random.randrange(0, len(map1), 1)  # random select of event from map list
-        # event = event_list[event_nb]                 # search in event_list corresponding event(Class)
-        event = map1.pop(event_nb)                    # pick up the event from map list
-        text = event.event_text
-        self.display_text(text)
-        test_parameter = event.event_test
-        if test_parameter == "_str":
-            main_char_test = random.randrange(0, sukesan._str+1, 1)
-        elif test_parameter == "_agi":
-            main_char_test = random.randrange(0, sukesan._agi+1, 1)
-        elif test_parameter == "_int":
-            main_char_test = random.randrange(0, sukesan._int+1, 1)
-        elif test_parameter == "_hp":
-            main_char_test = random.randrange(0, sukesan._hp+1, 1)
+        if turn == 0:
+            event_nb = random.randrange(0, len(current_map), 1)  # random select of event from map list
+            event = current_map.pop(event_nb)                    # pick up the event from map list
+            test_parameter = event.event_test
+            if test_parameter == "_str":
+                main_char_max = sukesan._str
+            elif test_parameter == "_agi":
+                main_char_max = sukesan._agi
+            elif test_parameter == "_int":
+                main_char_max = sukesan._int
+            elif test_parameter == "_hp":
+                main_char_max = sukesan._hp
+            else:
+                main_char_max = 0
+            main_char_test = random.randrange(1, main_char_max+1, 1)
+            text = "%s %s %s/%s" % (event.event_text, event.event_test, event.event_hurdle, main_char_max)
+            self.display_text(text)
+            self.btn_home.config(state=DISABLED)
+
+            turn = 1
         else:
-            main_char_test = 0
-        self.hurdle_check(event.event_hurdle, main_char_test, event)
-        display_status(self)
+            self.hurdle_check(event.event_hurdle, main_char_test, event)
+            display_status(self)
+            turn = 0
+            self.btn_home.config(state=NORMAL)
+
+        # ----- Loop Execution with Timer -----
+        self.timer_id = self.after(500, self.explore)    # this is the loop execution with timer
+        # self.after_cancel(timer_id)
+        # ------------------------------------
 
     def hurdle_check(self, event_hurdle, main_char_test, event):
         if event_hurdle > main_char_test:  # case fail
-            text = event.msg_event_fail
+            text = "%s %s" % (main_char_test,event.msg_event_fail)
             incidence_effect = random.randrange(event.incidence_min, event.incidence_max+1, 1)
             sukesan._hp -= incidence_effect
-        else:
-            text = event.msg_event_succeed  # case succeed
+        else:   # case succeed
+            text = "%s %s" % (main_char_test,event.msg_event_succeed)
             exp_effect = random.randrange(event.exp_min, event.exp_max+1, 1)
             sukesan._exp += exp_effect
             gold_effect = random.randrange(event.gold_min, event.gold_max+1, 1)
@@ -168,14 +227,15 @@ class MainPage(Frame):
         global is_alive
         if sukesan._hp <= 0:
             text = '免れることのない死が訪れた。ピンピンころり。やったね！'
-            is_alive = False
+            self.is_alive = False
             self.btn_explore.grid_forget()
-            # self.btn_home.grid_forget()
+            self.btn_home.grid_forget()
             self.display_text(text)
 
     def home(self):
         global at_home
         global is_alive
+        self.after_cancel(self.timer_id) # used to stop timer but also causes error when no timer on.
         if not at_home:
             text = 'おうちに帰った。'
             at_home = True
@@ -190,13 +250,17 @@ class MainPage(Frame):
                     print("jyumyou")
                     is_alive = False
                     sukesan._hp= 0
-
+            self.btn_shop.config(state=NORMAL)
+            self.menu_list1.config(state=NORMAL)
+            self.btn_explore.config(state=NORMAL)
         else:
             text = '狭くて暗くて嫌かもしれませんが、ここがあなたの家です。'
         self.display_text(text)
         display_status(self)
+# ----- END of Main Page Window -----
 
 
+# ----- Start of Shop Page and Executions -----
 class ShopPage(Frame):
 
     def __init__(self, parent, controller):
@@ -209,6 +273,7 @@ class ShopPage(Frame):
 
         # button2 = ttk.Button(self, text="Page Two", command=lambda: controller.show_frame(PageTwo))
         # button2.pack()
+# ----- END of Shop Page -----
 
 
 class PageTwo(Frame):
@@ -244,7 +309,7 @@ def display_status(self):
 
 
 
-sukesan = MainChar(1, "", "sukesan", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
+#sukesan = MainChar(1, "", "sukesan", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
 
 
 app = Generator()
