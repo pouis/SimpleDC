@@ -199,7 +199,10 @@ class MainPage(Frame):
         if event_hurdle > main_char_test:  # case fail
             text = "%s %s" % (main_char_test, event.msg_event_fail)
             incidence_effect = random.randrange(event.incidence_min, event.incidence_max + 1, 1)
-            sukesan._hp -= incidence_effect
+            sukesan.damage(incidence_effect)
+            if not sukesan.is_alive:
+                self._handle_death()
+                return
         else:   # case succeed
             text = "%s %s" % (main_char_test, event.msg_event_succeed)
             exp_effect = random.randrange(event.exp_min, event.exp_max + 1, 1)
@@ -208,13 +211,11 @@ class MainPage(Frame):
             sukesan._gold += gold_effect
         self.display_text(text)
 
-    def check_status(self):
-        if sukesan._hp <= 0:
-            text = '免れることのない死が訪れた。ピンピンころり。やったね！'
-            sukesan.is_alive = False
-            self.btn_explore.grid_forget()
-            self.btn_home.grid_forget()
-            self.display_text(text)
+    def _handle_death(self):
+        text = '免れることのない死が訪れた。ピンピンころり。やったね！'
+        self.btn_explore.grid_forget()
+        self.btn_home.grid_forget()
+        self.display_text(text)
 
     def _handle_home(self):
         self.after_cancel(self.timer_id)  # used to stop timer but also causes error when no timer on.
@@ -227,26 +228,12 @@ class MainPage(Frame):
 
     def _home(self):
         text = 'おうちに帰った。'
-        sukesan.at_home = True
-        sukesan._hp = sukesan.maxhp
-        sukesan._age += 1
-        if sukesan._age >= 40:
-            print("over40")
-            self._process_jyumyou()
+        sukesan.go_home()
         self.btn_shop.config(state=NORMAL)
         self.menu_list1.config(state=NORMAL)
         self.btn_explore.config(state=NORMAL)
         self.display_text(text)
         display_status(self)
-
-    def _process_jyumyou(self):
-        jyumyou = 60
-        tenmei = random.randrange(sukesan._age, jyumyou + 1, 1)
-        print("tenmei")
-        if tenmei == jyumyou:
-            print("jyumyou")
-            sukesan.is_alive = False
-            sukesan._hp = 0
 # ----- END of Main Page Window -----
 
 
@@ -285,7 +272,6 @@ def display_status(self):
     _exp = sukesan._exp
     _gold = sukesan._gold
     _age = sukesan._age
-    self.check_status()
 
     self.t2.config(state=NORMAL)
     self.t2.delete(1.0, END)
