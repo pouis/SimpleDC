@@ -74,11 +74,14 @@ def init_chars():
 class Game(object):
     def __init__(self):
         self._mapdict = init_maps()
-        self.sukesan, self.chardict = init_chars()
+        self.sukesan, self._chardict = init_chars()
 
     def select_map(self, map_name):
         self.current_map = self._mapdict[map_name]
         print(self.current_map)
+
+    def select_char(self, char_name):
+        self.sukesan = self._chardict[char_name]
 
 
 # ----- Window Management System -----
@@ -152,7 +155,7 @@ class MainPage(Frame):
         self._event = None
 
     def select_char(self, char_name):
-        self.context.sukesan = self.context.chardict[char_name]
+        self.context.select_char(char_name)
         self.display_status()
         print(self.context.sukesan)
 
