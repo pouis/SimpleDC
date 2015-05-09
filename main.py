@@ -165,6 +165,9 @@ class MainPage(Frame):
         global event
         global main_char_test
 
+        if not sukesan.is_alive:
+            return
+
         if len(current_map) == 0:
             text = "このダンジョンは制覇した！"
             self.display_text(text)
