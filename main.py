@@ -189,17 +189,7 @@ class MainPage(Frame):
         global main_char_test
         event_nb = random.randrange(0, len(current_map), 1)  # random select of event from map list
         self._event = current_map.pop(event_nb)                    # pick up the event from map list
-        test_parameter = self._event.event_test
-        if test_parameter == "_str":
-            main_char_max = sukesan._str
-        elif test_parameter == "_agi":
-            main_char_max = sukesan._agi
-        elif test_parameter == "_int":
-            main_char_max = sukesan._int
-        elif test_parameter == "_hp":
-            main_char_max = sukesan._hp
-        else:
-            main_char_max = 0
+        main_char_max = getattr(sukesan, self._event.event_test) or 0
         main_char_test = random.randrange(1, main_char_max + 1, 1)
         text = "%s %s %s/%s" % (self._event.event_text, self._event.event_test, self._event.event_hurdle, main_char_max)
         self.display_text(text)
