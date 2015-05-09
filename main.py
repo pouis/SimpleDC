@@ -9,49 +9,50 @@ LARGE_FONT = ("Verdana", 12)
 
 
 # -----MAP SETUP-----
+class Map(object):
+    def __init__(self, name, event_tuples):
+        """event_tuples: (event_class, number of instances to add)"""
+        self.name = name
+        self._events = []
+        for cls, num in event_tuples:
+            self._add_events(cls, num)
+
+    def _add_events(self, event_class, num):
+        for i in range(0, num):
+            self._events.append(event_class())
+
+    @property
+    def is_empty(self):
+        return len(self._events) == 0
+
+    def pop_random_event(self):
+        event_nb = random.randrange(0, len(self._events), 1)  # random select of event from map list
+        return self._events.pop(event_nb)                    # pick up the event from map list
+
+
 def init_maps():
-    map1 = []
-    for i in range(0, 10):
-        map1.append(Explore())
-    for i in range(0, 5):
-        map1.append(Encounter())
-    for i in range(0, 3):
-        map1.append(Pit())
-    for i in range(0, 2):
-        map1.append(HiddenDoor())
-    for i in range(0, 1):
-        map1.append(Treasure())
-
-    map2 = []
-    for i in range(0, 2):
-        map2.append(Explore())
-    for i in range(0, 2):
-        map2.append(Encounter())
-    for i in range(0, 2):
-        map2.append(Pit())
-    for i in range(0, 2):
-        map2.append(HiddenDoor())
-    for i in range(0, 2):
-        map2.append(Treasure())
-
-    map3 = []
-    for i in range(0, 2):
-        map3.append(Explore())
-    for i in range(0, 2):
-        map3.append(Encounter())
-    for i in range(0, 2):
-        map3.append(Pit())
-    for i in range(0, 2):
-        map3.append(HiddenDoor())
-    for i in range(0, 2):
-        map3.append(Treasure())
-
-    mapdict = {
-        '地下１階': map1,
-        '地下２階': map2,
-        '地下３階': map3,
-    }
-    return map1, mapdict
+    map1 = Map('地下１階', [
+        (Explore, 10),
+        (Encounter, 5),
+        (Pit, 3),
+        (HiddenDoor, 2),
+        (Treasure, 1),
+    ])
+    map2 = Map('地下２階', [
+        (Explore, 2),
+        (Encounter, 2),
+        (Pit, 2),
+        (HiddenDoor, 2),
+        (Treasure, 2),
+    ])
+    map3 = Map('地下３階', [
+        (Explore, 2),
+        (Encounter, 2),
+        (Pit, 2),
+        (HiddenDoor, 2),
+        (Treasure, 2),
+    ])
+    return dict([(m.name, m) for m in [map1, map2, map3]])
 # ------------------
 
 
@@ -72,8 +73,12 @@ def init_chars():
 
 class Game(object):
     def __init__(self):
-        self.current_map, self.mapdict = init_maps()
+        self._mapdict = init_maps()
         self.sukesan, self.chardict = init_chars()
+
+    def select_map(self, map_name):
+        self.current_map = self._mapdict[map_name]
+        print(self.current_map)
 
 
 # ----- Window Management System -----
@@ -129,10 +134,12 @@ class MainPage(Frame):
         self.btn_home = ttk.Button(self, text='帰宅する', command=self._handle_home)
         self.btn_home.grid(row=2, column=3)
         menu_list1_var = StringVar()
-        menu_list1_var.set('地下１階')
         available_dg = ['地下１階', '地下２階', '地下３階']
+        init_dg = available_dg[0]
+        menu_list1_var.set(init_dg)
+        self.context.select_map(init_dg)
         print(available_dg)
-        self.menu_list1 = ttk.OptionMenu(self, menu_list1_var, None, *available_dg, command=self.select_map)
+        self.menu_list1 = ttk.OptionMenu(self, menu_list1_var, None, *available_dg, command=self.context.select_map)
         self.menu_list1.grid(row=3, column=1)
         menu_list2_var = StringVar()
         menu_list2_var.set('スケ郎')
@@ -143,10 +150,6 @@ class MainPage(Frame):
 
         self.display_status()
         self._event = None
-
-    def select_map(self, map_name):
-        self.context.current_map = self.context.mapdict[map_name]
-        print(self.context.current_map)
 
     def select_char(self, char_name):
         self.context.sukesan = self.context.chardict[char_name]
@@ -163,7 +166,7 @@ class MainPage(Frame):
         if not self.context.sukesan.is_alive:
             return
 
-        if len(self.context.current_map) == 0:
+        if self.context.current_map.is_empty:
             text = "このダンジョンは制覇した！"
             self.display_text(text)
             self.btn_home.config(state=NORMAL)
@@ -192,8 +195,7 @@ class MainPage(Frame):
 
     def _next_event(self):
         global main_char_test
-        event_nb = random.randrange(0, len(self.context.current_map), 1)  # random select of event from map list
-        self._event = self.context.current_map.pop(event_nb)                    # pick up the event from map list
+        self._event = self.context.current_map.pop_random_event()
         main_char_max = getattr(self.context.sukesan, self._event.event_test) or 0
         main_char_test = random.randrange(1, main_char_max + 1, 1)
         text = "%s %s %s/%s" % (self._event.event_text, self._event.event_test, self._event.event_hurdle, main_char_max)
