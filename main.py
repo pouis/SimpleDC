@@ -7,73 +7,80 @@ import random
 
 LARGE_FONT = ("Verdana", 12)
 
+
 # -----MAP SETUP-----
+def init_maps():
+    map1 = []
+    for i in range(0, 10):
+        map1.append(Explore())
+    for i in range(0, 5):
+        map1.append(Encounter())
+    for i in range(0, 3):
+        map1.append(Pit())
+    for i in range(0, 2):
+        map1.append(HiddenDoor())
+    for i in range(0, 1):
+        map1.append(Treasure())
 
-map1 = []
-for i in range(0, 10):
-    map1.append(Explore())
-for i in range(0, 5):
-    map1.append(Encounter())
-for i in range(0, 3):
-    map1.append(Pit())
-for i in range(0, 2):
-    map1.append(HiddenDoor())
-for i in range(0, 1):
-    map1.append(Treasure())
+    map2 = []
+    for i in range(0, 2):
+        map2.append(Explore())
+    for i in range(0, 2):
+        map2.append(Encounter())
+    for i in range(0, 2):
+        map2.append(Pit())
+    for i in range(0, 2):
+        map2.append(HiddenDoor())
+    for i in range(0, 2):
+        map2.append(Treasure())
 
-map2 = []
-for i in range(0, 2):
-    map2.append(Explore())
-for i in range(0, 2):
-    map2.append(Encounter())
-for i in range(0, 2):
-    map2.append(Pit())
-for i in range(0, 2):
-    map2.append(HiddenDoor())
-for i in range(0, 2):
-    map2.append(Treasure())
+    map3 = []
+    for i in range(0, 2):
+        map3.append(Explore())
+    for i in range(0, 2):
+        map3.append(Encounter())
+    for i in range(0, 2):
+        map3.append(Pit())
+    for i in range(0, 2):
+        map3.append(HiddenDoor())
+    for i in range(0, 2):
+        map3.append(Treasure())
 
-map3 = []
-for i in range(0, 2):
-    map3.append(Explore())
-for i in range(0, 2):
-    map3.append(Encounter())
-for i in range(0, 2):
-    map3.append(Pit())
-for i in range(0, 2):
-    map3.append(HiddenDoor())
-for i in range(0, 2):
-    map3.append(Treasure())
-
-mapdict = {
-    '地下１階': map1,
-    '地下２階': map2,
-    '地下３階': map3,
-}
-
-current_map = map1
+    mapdict = {
+        '地下１階': map1,
+        '地下２階': map2,
+        '地下３階': map3,
+    }
+    return map1, mapdict
 # ------------------
 
 
 # -----MAIN CHARACTER SETUP-----
-char1 = MainChar(1, "", "スケ郎", 25, 25, 70, 70, 70, 70, 70, 0, 0, 36)
-char2 = MainChar(2, "", "スケ次", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
-char3 = MainChar(3, "", "すけさん", 100, 100, 90, 90, 90, 90, 90, 0, 0, 36)
+def init_chars():
+    char1 = MainChar(1, "", "スケ郎", 25, 25, 70, 70, 70, 70, 70, 0, 0, 36)
+    char2 = MainChar(2, "", "スケ次", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
+    char3 = MainChar(3, "", "すけさん", 100, 100, 90, 90, 90, 90, 90, 0, 0, 36)
 
-chardict = {
-    'スケ郎': char1,
-    'スケ次': char2,
-    'すけさん': char3,
-}
-sukesan = char1
+    chardict = {
+        'スケ郎': char1,
+        'スケ次': char2,
+        'すけさん': char3,
+    }
+    return char1, chardict
 # ------------------------------
+
+
+class Game(object):
+    def __init__(self):
+        self.current_map, self.mapdict = init_maps()
+        self.sukesan, self.chardict = init_chars()
 
 
 # ----- Window Management System -----
 # I don't fully understand how it works, but it works
 class Generator(Tk):
-    def __init__(self, *args, **kwargs):
-        Tk.__init__(self, *args, **kwargs)
+    def __init__(self, context):
+        Tk.__init__(self)
         container = Frame(self)
         container.pack(side="top", fill="both", expand=True)
         container.grid_rowconfigure(0, weight=1)
@@ -81,7 +88,7 @@ class Generator(Tk):
         self.frames = {}
 
         for F in (MainPage, ShopPage, PageTwo):
-            frame = F(container, self)
+            frame = F(context, container, self)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
@@ -95,8 +102,9 @@ class Generator(Tk):
 
 # -----Start of Main Page Window and Executions -----
 class MainPage(Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, context, parent, controller):
         Frame.__init__(self, parent)
+        self.context = context
         self.s = ttk.Scrollbar(self)
         self.t = Text(self, height=12, width=50)
         self.t2 = Text(self, height=12, width=10)
@@ -123,7 +131,6 @@ class MainPage(Frame):
         menu_list1_var = StringVar()
         menu_list1_var.set('地下１階')
         available_dg = ['地下１階', '地下２階', '地下３階']
-        # available_dg = mapdict.keys() # Why if I replace above line with this, it does not work?
         print(available_dg)
         self.menu_list1 = ttk.OptionMenu(self, menu_list1_var, None, *available_dg, command=self.select_map)
         self.menu_list1.grid(row=3, column=1)
@@ -138,15 +145,13 @@ class MainPage(Frame):
         self._event = None
 
     def select_map(self, map_name):
-        global current_map
-        current_map = mapdict[map_name]
-        print(current_map)
+        self.context.current_map = self.context.mapdict[map_name]
+        print(self.context.current_map)
 
     def select_char(self, char_name):
-        global sukesan
-        sukesan = chardict[char_name]
+        self.context.sukesan = self.context.chardict[char_name]
         self.display_status()
-        print(sukesan)
+        print(self.context.sukesan)
 
     def display_text(self, itext):
         self.t.config(state=NORMAL)
@@ -155,10 +160,10 @@ class MainPage(Frame):
         self.t.config(state=DISABLED)
 
     def explore(self):
-        if not sukesan.is_alive:
+        if not self.context.sukesan.is_alive:
             return
 
-        if len(current_map) == 0:
+        if len(self.context.current_map) == 0:
             text = "このダンジョンは制覇した！"
             self.display_text(text)
             self.btn_home.config(state=NORMAL)
@@ -168,10 +173,10 @@ class MainPage(Frame):
         self.btn_shop.config(state=DISABLED)
         self.menu_list1.config(state=DISABLED)
 
-        if sukesan.at_home:
+        if self.context.sukesan.at_home:
             text = '\n家に負けず劣らず薄暗いダンジョンにもぐった。'
             self.display_text(text)
-            sukesan.at_home = False
+            self.context.sukesan.at_home = False
         if self._event is None:
             self._next_event()
         else:
@@ -187,9 +192,9 @@ class MainPage(Frame):
 
     def _next_event(self):
         global main_char_test
-        event_nb = random.randrange(0, len(current_map), 1)  # random select of event from map list
-        self._event = current_map.pop(event_nb)                    # pick up the event from map list
-        main_char_max = getattr(sukesan, self._event.event_test) or 0
+        event_nb = random.randrange(0, len(self.context.current_map), 1)  # random select of event from map list
+        self._event = self.context.current_map.pop(event_nb)                    # pick up the event from map list
+        main_char_max = getattr(self.context.sukesan, self._event.event_test) or 0
         main_char_test = random.randrange(1, main_char_max + 1, 1)
         text = "%s %s %s/%s" % (self._event.event_text, self._event.event_test, self._event.event_hurdle, main_char_max)
         self.display_text(text)
@@ -199,16 +204,16 @@ class MainPage(Frame):
         if event_hurdle > main_char_test:  # case fail
             text = "%s %s" % (main_char_test, event.msg_event_fail)
             incidence_effect = random.randrange(event.incidence_min, event.incidence_max + 1, 1)
-            sukesan.damage(incidence_effect)
-            if not sukesan.is_alive:
+            self.context.sukesan.damage(incidence_effect)
+            if not self.context.sukesan.is_alive:
                 self._handle_death()
                 return
         else:   # case succeed
             text = "%s %s" % (main_char_test, event.msg_event_succeed)
             exp_effect = random.randrange(event.exp_min, event.exp_max + 1, 1)
-            sukesan._exp += exp_effect
+            self.context.sukesan._exp += exp_effect
             gold_effect = random.randrange(event.gold_min, event.gold_max + 1, 1)
-            sukesan._gold += gold_effect
+            self.context.sukesan._gold += gold_effect
         self.display_text(text)
 
     def _handle_death(self):
@@ -219,7 +224,7 @@ class MainPage(Frame):
 
     def _handle_home(self):
         self.after_cancel(self.timer_id)  # used to stop timer but also causes error when no timer on.
-        if not sukesan.at_home:
+        if not self.context.sukesan.at_home:
             self._home()
         else:
             text = '狭くて暗くて嫌かもしれませんが、ここがあなたの家です。'
@@ -228,7 +233,7 @@ class MainPage(Frame):
 
     def _home(self):
         text = 'おうちに帰った。'
-        sukesan.go_home()
+        self.context.sukesan.go_home()
         self.btn_shop.config(state=NORMAL)
         self.menu_list1.config(state=NORMAL)
         self.btn_explore.config(state=NORMAL)
@@ -236,10 +241,10 @@ class MainPage(Frame):
         self.display_status()
 
     def display_status(self):
-        _hp = sukesan._hp
-        _exp = sukesan._exp
-        _gold = sukesan._gold
-        _age = sukesan._age
+        _hp = self.context.sukesan._hp
+        _exp = self.context.sukesan._exp
+        _gold = self.context.sukesan._gold
+        _age = self.context.sukesan._age
 
         self.t2.config(state=NORMAL)
         self.t2.delete(1.0, END)
@@ -255,8 +260,9 @@ class MainPage(Frame):
 # ----- Start of Shop Page and Executions -----
 class ShopPage(Frame):
 
-    def __init__(self, parent, controller):
+    def __init__(self, context, parent, controller):
         Frame.__init__(self, parent)
+        self.context = context
         label = ttk.Label(self, text="何を購入されます？", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
@@ -270,8 +276,9 @@ class ShopPage(Frame):
 
 class PageTwo(Frame):
 
-    def __init__(self, parent, controller):
+    def __init__(self, context, parent, controller):
         Frame.__init__(self, parent)
+        self.context = context
         label = ttk.Label(self, text="Page Two!!!", font=LARGE_FONT)
         label.pack(pady=10, padx=10)
 
@@ -281,6 +288,7 @@ class PageTwo(Frame):
         button2 = ttk.Button(self, text="Page One", command=lambda: controller.show_frame(ShopPage))
         button2.pack()
 
-
-app = Generator()
-app.mainloop()
+if __name__ == '__main__':
+    game = Game()
+    app = Generator(game)
+    app.mainloop()
