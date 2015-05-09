@@ -125,7 +125,7 @@ class MainPage(Frame):
         self.btn_quit.grid(row=4, column=3)
         self.btn_explore = ttk.Button(self, text='探索する', command=self.explore)
         self.btn_explore.grid(row=2, column=1)
-        self.btn_home = ttk.Button(self, text='帰宅する', command=self.home)
+        self.btn_home = ttk.Button(self, text='帰宅する', command=self._handle_home)
         self.btn_home.grid(row=2, column=3)
         menu_list1_var = StringVar()
         menu_list1_var.set('地下１階')
@@ -164,7 +164,6 @@ class MainPage(Frame):
         global at_home
         global turn
         global event
-        global main_char_test
 
         if not sukesan.is_alive:
             return
@@ -184,25 +183,7 @@ class MainPage(Frame):
             self.display_text(text)
             at_home = False
         if turn == 0:
-            event_nb = random.randrange(0, len(current_map), 1)  # random select of event from map list
-            event = current_map.pop(event_nb)                    # pick up the event from map list
-            test_parameter = event.event_test
-            if test_parameter == "_str":
-                main_char_max = sukesan._str
-            elif test_parameter == "_agi":
-                main_char_max = sukesan._agi
-            elif test_parameter == "_int":
-                main_char_max = sukesan._int
-            elif test_parameter == "_hp":
-                main_char_max = sukesan._hp
-            else:
-                main_char_max = 0
-            main_char_test = random.randrange(1, main_char_max+1, 1)
-            text = "%s %s %s/%s" % (event.event_text, event.event_test, event.event_hurdle, main_char_max)
-            self.display_text(text)
-            self.btn_home.config(state=DISABLED)
-
-            turn = 1
+            self._next_event()
         else:
             self.hurdle_check(event.event_hurdle, main_char_test, event)
             display_status(self)
@@ -214,16 +195,40 @@ class MainPage(Frame):
         # self.after_cancel(timer_id)
         # ------------------------------------
 
+    def _next_event(self):
+        global turn
+        global main_char_test
+        global event
+        event_nb = random.randrange(0, len(current_map), 1)  # random select of event from map list
+        event = current_map.pop(event_nb)                    # pick up the event from map list
+        test_parameter = event.event_test
+        if test_parameter == "_str":
+            main_char_max = sukesan._str
+        elif test_parameter == "_agi":
+            main_char_max = sukesan._agi
+        elif test_parameter == "_int":
+            main_char_max = sukesan._int
+        elif test_parameter == "_hp":
+            main_char_max = sukesan._hp
+        else:
+            main_char_max = 0
+        main_char_test = random.randrange(1, main_char_max + 1, 1)
+        text = "%s %s %s/%s" % (event.event_text, event.event_test, event.event_hurdle, main_char_max)
+        self.display_text(text)
+        self.btn_home.config(state=DISABLED)
+
+        turn = 1
+
     def hurdle_check(self, event_hurdle, main_char_test, event):
         if event_hurdle > main_char_test:  # case fail
-            text = "%s %s" % (main_char_test,event.msg_event_fail)
-            incidence_effect = random.randrange(event.incidence_min, event.incidence_max+1, 1)
+            text = "%s %s" % (main_char_test, event.msg_event_fail)
+            incidence_effect = random.randrange(event.incidence_min, event.incidence_max + 1, 1)
             sukesan._hp -= incidence_effect
         else:   # case succeed
-            text = "%s %s" % (main_char_test,event.msg_event_succeed)
-            exp_effect = random.randrange(event.exp_min, event.exp_max+1, 1)
+            text = "%s %s" % (main_char_test, event.msg_event_succeed)
+            exp_effect = random.randrange(event.exp_min, event.exp_max + 1, 1)
             sukesan._exp += exp_effect
-            gold_effect = random.randrange(event.gold_min, event.gold_max+1, 1)
+            gold_effect = random.randrange(event.gold_min, event.gold_max + 1, 1)
             sukesan._gold += gold_effect
         self.display_text(text)
 
@@ -236,31 +241,39 @@ class MainPage(Frame):
             self.btn_home.grid_forget()
             self.display_text(text)
 
-    def home(self):
-        global at_home
-        global is_alive
-        self.after_cancel(self.timer_id) # used to stop timer but also causes error when no timer on.
-        if not at_home:
-            text = 'おうちに帰った。'
-            at_home = True
-            sukesan._hp = sukesan.maxhp
-            sukesan._age += 1
-            if sukesan._age >= 40:
-                print("over40")
-                jyumyou = 60
-                tenmei = random.randrange(sukesan._age, jyumyou+1, 1)
-                print("tenmei")
-                if tenmei == jyumyou:
-                    print("jyumyou")
-                    is_alive = False
-                    sukesan._hp= 0
-            self.btn_shop.config(state=NORMAL)
-            self.menu_list1.config(state=NORMAL)
-            self.btn_explore.config(state=NORMAL)
+    def _handle_home(self):
+        self.after_cancel(self.timer_id)  # used to stop timer but also causes error when no timer on.
+        if not sukesan.at_home:
+            self._home()
         else:
             text = '狭くて暗くて嫌かもしれませんが、ここがあなたの家です。'
+            self.display_text(text)
+            display_status(self)
+
+    def _home(self):
+        global at_home
+        text = 'おうちに帰った。'
+        at_home = True
+        sukesan._hp = sukesan.maxhp
+        sukesan._age += 1
+        if sukesan._age >= 40:
+            print("over40")
+            self._process_jyumyou()
+        self.btn_shop.config(state=NORMAL)
+        self.menu_list1.config(state=NORMAL)
+        self.btn_explore.config(state=NORMAL)
         self.display_text(text)
         display_status(self)
+
+    def _process_jyumyou(self):
+        global is_alive
+        jyumyou = 60
+        tenmei = random.randrange(sukesan._age, jyumyou + 1, 1)
+        print("tenmei")
+        if tenmei == jyumyou:
+            print("jyumyou")
+            is_alive = False
+            sukesan._hp = 0
 # ----- END of Main Page Window -----
 
 
