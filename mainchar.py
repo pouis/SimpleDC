@@ -1,6 +1,8 @@
 class MainChar:
     """common base class for all main characters"""
     def __init__(self, charnb, title, name, _hp, maxhp, _mp, maxmp, _str, _agi, _int, _exp, _gold, _age):
+        self.is_alive = True
+        self.at_home = True
         self.charnb = charnb
         self.title = title
         self.name = name

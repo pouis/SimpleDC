@@ -70,8 +70,6 @@ sukesan = char1
 
 
 # -----INITIAL SETUP VARIABLES-----
-at_home = True
-is_alive = True
 turn = 0
 # ---------------------------------
 
@@ -161,7 +159,6 @@ class MainPage(Frame):
         self.t.config(state=DISABLED)
 
     def explore(self):
-        global at_home
         global turn
         global event
 
@@ -178,10 +175,10 @@ class MainPage(Frame):
         self.btn_shop.config(state=DISABLED)
         self.menu_list1.config(state=DISABLED)
 
-        if at_home:
+        if sukesan.at_home:
             text = '\n家に負けず劣らず薄暗いダンジョンにもぐった。'
             self.display_text(text)
-            at_home = False
+            sukesan.at_home = False
         if turn == 0:
             self._next_event()
         else:
@@ -233,10 +230,9 @@ class MainPage(Frame):
         self.display_text(text)
 
     def check_status(self):
-        global is_alive
         if sukesan._hp <= 0:
             text = '免れることのない死が訪れた。ピンピンころり。やったね！'
-            self.is_alive = False
+            sukesan.is_alive = False
             self.btn_explore.grid_forget()
             self.btn_home.grid_forget()
             self.display_text(text)
@@ -251,9 +247,8 @@ class MainPage(Frame):
             display_status(self)
 
     def _home(self):
-        global at_home
         text = 'おうちに帰った。'
-        at_home = True
+        sukesan.at_home = True
         sukesan._hp = sukesan.maxhp
         sukesan._age += 1
         if sukesan._age >= 40:
@@ -266,13 +261,12 @@ class MainPage(Frame):
         display_status(self)
 
     def _process_jyumyou(self):
-        global is_alive
         jyumyou = 60
         tenmei = random.randrange(sukesan._age, jyumyou + 1, 1)
         print("tenmei")
         if tenmei == jyumyou:
             print("jyumyou")
-            is_alive = False
+            sukesan.is_alive = False
             sukesan._hp = 0
 # ----- END of Main Page Window -----
 
