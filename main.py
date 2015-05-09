@@ -132,12 +132,13 @@ class MainPage(Frame):
         available_dg = ['地下１階', '地下２階', '地下３階']
         # available_dg = mapdict.keys() # Why if I replace above line with this, it does not work?
         print(available_dg)
-        self.menu_list1 = ttk.OptionMenu(self, menu_list1_var, *available_dg, command=self.select_map)
+        self.menu_list1 = ttk.OptionMenu(self, menu_list1_var, None, *available_dg, command=self.select_map)
         self.menu_list1.grid(row=3, column=1)
         menu_list2_var = StringVar()
         menu_list2_var.set('スケ郎')
         available_char = ['スケ郎', 'スケ次', 'すけさん']
-        self.menu_list2 = ttk.OptionMenu(self, menu_list2_var, *available_char, command=self.select_char)
+        menu_list2_var.set(available_char[0])
+        self.menu_list2 = ttk.OptionMenu(self, menu_list2_var, None, *available_char, command=self.select_char)
         self.menu_list2.grid(row=4, column=1)
 
         display_status(self)
