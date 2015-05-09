@@ -134,7 +134,7 @@ class MainPage(Frame):
         self.menu_list2 = ttk.OptionMenu(self, menu_list2_var, None, *available_char, command=self.select_char)
         self.menu_list2.grid(row=4, column=1)
 
-        display_status(self)
+        self.display_status()
         self._event = None
 
     def select_map(self, map_name):
@@ -145,7 +145,7 @@ class MainPage(Frame):
     def select_char(self, char_name):
         global sukesan
         sukesan = chardict[char_name]
-        display_status(self)
+        self.display_status()
         print(sukesan)
 
     def display_text(self, itext):
@@ -177,7 +177,7 @@ class MainPage(Frame):
         else:
             self._process_event(self._event.event_hurdle, main_char_test, self._event)
             self._event = None
-            display_status(self)
+            self.display_status()
             self.btn_home.config(state=NORMAL)
 
         # ----- Loop Execution with Timer -----
@@ -224,7 +224,7 @@ class MainPage(Frame):
         else:
             text = '狭くて暗くて嫌かもしれませんが、ここがあなたの家です。'
             self.display_text(text)
-            display_status(self)
+            self.display_status()
 
     def _home(self):
         text = 'おうちに帰った。'
@@ -233,7 +233,22 @@ class MainPage(Frame):
         self.menu_list1.config(state=NORMAL)
         self.btn_explore.config(state=NORMAL)
         self.display_text(text)
-        display_status(self)
+        self.display_status()
+
+    def display_status(self):
+        _hp = sukesan._hp
+        _exp = sukesan._exp
+        _gold = sukesan._gold
+        _age = sukesan._age
+
+        self.t2.config(state=NORMAL)
+        self.t2.delete(1.0, END)
+        self.t2.insert(END, "L    %s\n" % _hp)
+        self.t2.insert(END, "E    %s\n" % _exp)
+        self.t2.insert(END, "G    %s\n" % _gold)
+        self.t2.insert(END, "A    %s\n" % _age)
+        self.t2.see(END)
+        self.t2.config(state=DISABLED)
 # ----- END of Main Page Window -----
 
 
@@ -265,27 +280,6 @@ class PageTwo(Frame):
 
         button2 = ttk.Button(self, text="Page One", command=lambda: controller.show_frame(ShopPage))
         button2.pack()
-
-
-def display_status(self):
-    _hp = sukesan._hp
-    _exp = sukesan._exp
-    _gold = sukesan._gold
-    _age = sukesan._age
-
-    self.t2.config(state=NORMAL)
-    self.t2.delete(1.0, END)
-    self.t2.insert(END, "L    %s\n" % _hp)
-    self.t2.insert(END, "E    %s\n" % _exp)
-    self.t2.insert(END, "G    %s\n" % _gold)
-    self.t2.insert(END, "A    %s\n" % _age)
-    self.t2.see(END)
-    self.t2.config(state=DISABLED)
-
-
-
-
-#sukesan = MainChar(1, "", "sukesan", 50, 50, 80, 80, 80, 80, 80, 0, 0, 36)
 
 
 app = Generator()
