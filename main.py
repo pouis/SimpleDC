@@ -69,11 +69,6 @@ sukesan = char1
 # ------------------------------
 
 
-# -----INITIAL SETUP VARIABLES-----
-turn = 0
-# ---------------------------------
-
-
 # ----- Window Management System -----
 # I don't fully understand how it works, but it works
 class Generator(Tk):
@@ -140,6 +135,7 @@ class MainPage(Frame):
         self.menu_list2.grid(row=4, column=1)
 
         display_status(self)
+        self._event = None
 
     def select_map(self, map_name):
         global current_map
@@ -159,9 +155,6 @@ class MainPage(Frame):
         self.t.config(state=DISABLED)
 
     def explore(self):
-        global turn
-        global event
-
         if not sukesan.is_alive:
             return
 
@@ -179,12 +172,12 @@ class MainPage(Frame):
             text = '\n家に負けず劣らず薄暗いダンジョンにもぐった。'
             self.display_text(text)
             sukesan.at_home = False
-        if turn == 0:
+        if self._event is None:
             self._next_event()
         else:
-            self.hurdle_check(event.event_hurdle, main_char_test, event)
+            self._process_event(self._event.event_hurdle, main_char_test, self._event)
+            self._event = None
             display_status(self)
-            turn = 0
             self.btn_home.config(state=NORMAL)
 
         # ----- Loop Execution with Timer -----
@@ -193,12 +186,10 @@ class MainPage(Frame):
         # ------------------------------------
 
     def _next_event(self):
-        global turn
         global main_char_test
-        global event
         event_nb = random.randrange(0, len(current_map), 1)  # random select of event from map list
-        event = current_map.pop(event_nb)                    # pick up the event from map list
-        test_parameter = event.event_test
+        self._event = current_map.pop(event_nb)                    # pick up the event from map list
+        test_parameter = self._event.event_test
         if test_parameter == "_str":
             main_char_max = sukesan._str
         elif test_parameter == "_agi":
@@ -210,13 +201,11 @@ class MainPage(Frame):
         else:
             main_char_max = 0
         main_char_test = random.randrange(1, main_char_max + 1, 1)
-        text = "%s %s %s/%s" % (event.event_text, event.event_test, event.event_hurdle, main_char_max)
+        text = "%s %s %s/%s" % (self._event.event_text, self._event.event_test, self._event.event_hurdle, main_char_max)
         self.display_text(text)
         self.btn_home.config(state=DISABLED)
 
-        turn = 1
-
-    def hurdle_check(self, event_hurdle, main_char_test, event):
+    def _process_event(self, event_hurdle, main_char_test, event):
         if event_hurdle > main_char_test:  # case fail
             text = "%s %s" % (main_char_test, event.msg_event_fail)
             incidence_effect = random.randrange(event.incidence_min, event.incidence_max + 1, 1)
